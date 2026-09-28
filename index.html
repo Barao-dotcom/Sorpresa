@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>¡Pide un deseo! 🎂✨</title>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #08070c;
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+            text-align: center;
+            transition: background 1.5s ease;
+        }
+
+        body.lit {
+            background: radial-gradient(circle at top, #2b1055 0%, #1a1a2e 60%, #0f172a 100%);
+        }
+
+        /* --- PANTALLA 1: EL PASTEL --- */
+        #cake-screen {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+            transition: opacity 1s ease, visibility 1s;
+        }
+
+        .instruction {
+            margin-top: 2.5rem;
+            font-size: 1.2rem;
+            color: #ffd166;
+            letter-spacing: 1px;
+            animation: pulse 2s infinite;
+            padding: 0 1rem;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+
+        /* Dibujo del Pastel en CSS */
+        .cake {
+            position: relative;
+            width: 200px;
+            height: 160px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+        }
+
+        .candle {
+            width: 16px;
+            height: 50px;
+            background: repeating-linear-gradient(45deg, #fff, #fff 5px, #ff4d6d 5px, #ff4d6d 10px);
+            border-radius: 4px 4px 0 0;
+            position: relative;
+            z-index: 3;
+        }
+
+        .flame {
+            width: 22px;
+            height: 35px;
+            background: radial-gradient(ellipse at bottom, #fff 10%, #ffd166 40%, #ff6b6b 90%);
+            border-radius: 50% 50% 35% 35%;
+            position: absolute;
+            top: -38px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: pointer;
+            box-shadow: 0 0 25px #ffd166, 0 0 60px #ff9f1c, 0 0 100px #ff4d6d;
+            animation: flicker 0.15s infinite alternate;
+        }
+
+        .flame.off {
+            display: none;
+        }
+
+        @keyframes flicker {
+            0% { transform: translateX(-50%) scale(1) rotate(-2deg); }
+            100% { transform: translateX(-50%) scale(1.06) rotate(2deg); }
+        }
+
+        .layer-top {
+            width: 140px;
+            height: 50px;
+            background: #ff8fa3;
+            border-radius: 10px 10px 0 0;
+            position: relative;
+            box-shadow: inset 0 8px 0 #fff0f3;
+        }
+
+        .layer-bottom {
+            width: 180px;
+            height: 60px;
+            background: #ff4d6d;
+            border-radius: 10px 10px 4px 4px;
+            box-shadow: inset 0 10px 0 #ffb3c6, 0 10px 20px rgba(0,0,0,0.6);
+        }
+
+        .plate {
+            width: 220px;
+            height: 12px;
+            background: #e2e8f0;
+            border-radius: 10px;
+        }
+
+        /* --- PANTALLA 2: CONTENIDO Y CARRUSEL 3D --- */
+        #main-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 3rem 1.5rem 6rem;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 1.2s ease;
+            pointer-events: none;
+        }
+
+        #main-content.visible {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            color: #ffb3c6;
+            text-shadow: 0 0 15px rgba(255, 77, 109, 0.7);
+            margin-bottom: 1.5rem;
+        }
+
+        .letter-box {
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 18px;
+            padding: 1.8rem;
+            font-size: 1.1rem;
+            line-height: 1.7;
+            min-height: 130px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+            margin-bottom: 4rem;
+        }
+
+        /* Contenedor Carrusel 3D */
+        .carousel-wrapper {
+            perspective: 1000px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 260px;
+            margin-top: 2rem;
+        }
+
+        .carousel {
+            position: relative;
+            width: 150px;
+            height: 200px;
+            transform-style: preserve-3d;
+            animation: spin 22s infinite linear;
+        }
+
+        .carousel:hover {
+            animation-play-state: paused;
+        }
+
+        .carousel-item {
+            position: absolute;
+            inset: 0;
+            background: #fff;
+            padding: 6px 6px 24px 6px;
+            border-radius: 6px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.5);
+            transform: rotateY(calc(var(--i) * 60deg)) translateZ(210px);
+            transition: transform 0.3s;
+        }
+
+        .carousel-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 4px;
+        }
+
+        @keyframes spin {
+            from { transform: rotateX(-5deg) rotateY(0deg); }
+            to { transform: rotateX(-5deg) rotateY(360deg); }
+        }
+
+        /* Ajuste para pantallas de celular */
+        @media (max-width: 600px) {
+            h1 { font-size: 2rem; }
+            .carousel { width: 120px; height: 165px; }
+            .carousel-item {
+                transform: rotateY(calc(var(--i) * 60deg)) translateZ(155px);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Audio de fondo -->
+    <audio id="bg-music" loop>
+        <source src="vicente-fernández-letra-estas-son-las-mañanitas.mp3" type="audio/mpeg">
+    </audio>
+
+    <!-- Fase 1: El Pastel y la Vela -->
+    <div id="cake-screen">
+        <div class="cake">
+            <div class="candle">
+                <div class="flame" id="flame" onclick="blowCandle()"></div>
+            </div>
+            <div class="layer-top"></div>
+            <div class="layer-bottom"></div>
+            <div class="plate"></div>
+        </div>
+        <p class="instruction">✨ Pide un deseo y toca la llama para apagar la vela ✨</p>
+    </div>
+
+    <!-- Fase 2: Carta y Carrusel 3D -->
+    <div id="main-content">
+        <h1>¡Feliz Cumpleaños, Brigitte! 👑💖🎂</h1>
+
+        <div class="letter-box">
+            <p id="typewriter-text"></p>
+        </div>
+
+        <div class="carousel-wrapper">
+            <div class="carousel">
+                <div class="carousel-item" style="--i: 1;"><img src="WhatsApp Image 2026-09-27 at 22.58.35 (1).jpeg" alt="Foto 1"></div>
+                <div class="carousel-item" style="--i: 2;"><img src="WhatsApp Image 2026-09-27 at 22.58.35 (2).jpeg" alt="Foto 2"></div>
+                <div class="carousel-item" style="--i: 3;"><img src="WhatsApp Image 2026-09-27 at 22.58.35 (3).jpeg" alt="Foto 3"></div>
+                <div class="carousel-item" style="--i: 4;"><img src="WhatsApp Image 2026-09-27 at 22.58.35 (4).jpeg" alt="Foto 4"></div>
+                <div class="carousel-item" style="--i: 5;"><img src="WhatsApp Image 2026-09-27 at 22.58.35 (5).jpeg" alt="Foto 5"></div>
+                <div class="carousel-item" style="--i: 6;"><img src="Te-quiero-mucho.-feliz-cumpleaños.jpg" alt="Foto 6"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const message = "Te deseo siempre lo mejor para ti, que la pases bien en este dia especial para ti. Gracias por iluminar mis días con tu sonrisa y por ser tan especial para mí. !Brilla¡ ¡Te Quiero Mucho! ❤️✨";
+        let index = 0;
+
+        function blowCandle() {
+            // 1. Apagar la llama
+            document.getElementById('flame').classList.add('off');
+
+            // 2. Encender el fondo y reproducir música
+            document.body.classList.add('lit');
+            const music = document.getElementById('bg-music');
+            music.play().catch(() => console.log("Coloca musica.mp3 en la misma carpeta"));
+
+            // 3. Lanzar confeti
+            launchConfetti();
+
+            // 4. Transición a la carta y al carrusel
+            const cakeScreen = document.getElementById('cake-screen');
+            setTimeout(() => {
+                cakeScreen.style.opacity = '0';
+                setTimeout(() => cakeScreen.style.visibility = 'hidden', 1000);
+                document.getElementById('main-content').classList.add('visible');
+                setTimeout(typeWriter, 600);
+            }, 600);
+        }
+
+        function typeWriter() {
+            if (index < message.length) {
+                document.getElementById("typewriter-text").innerHTML += message.charAt(index);
+                index++;
+                setTimeout(typeWriter, 45);
+            }
+        }
+
+        function launchConfetti() {
+            const duration = 4.5 * 1000;
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 } });
+                confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 } });
+                if (Date.now() < end) requestAnimationFrame(frame);
+            }());
+        }
+    </script>
+</body>
+</html>
